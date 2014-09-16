@@ -1,6 +1,78 @@
-Load Data while setting the automatic column as a factor
+#MPG Analysis of Transmission Type in Motor Trend Data
+
+##Executive Summary
+
+
+##Load Data 
+
+Perform an initial data load while setting the appropriate columns as factors
 
 ```{r}
+library(car)
 data(mtcars)
 mtcars$am <- factor(mtcars$am, labels=c('Automatic', 'Manual'))
+mtcars$cyl <- factor(mtcars$cyl)
+mtcars$vs <- factor(mtcars$vs)
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+```
+
+
+
+
+
+
+#Appendix
+
+##Data Exploration
+
+###Boxplot of MPG by transmission Type
+
+```{r, echo=FALSE}
+boxplot(mpg ~ am, data=mtcars, col="blue", ylab ="Miles Per Gallon")
+```
+
+###Summary of mtcars Data
+```{r}
+summary(mtcars)
+str(mtcars)
+```
+
+##Model Selection
+
+###Initial Full Model
+
+An initial model containing all vairables seems to show that there seems to be too much variability inflaction if you use all of the variables for the model.
+```{r}
+fullfit <- lm(mpg ~ ., data = mtcars)
+summary(fullfit)
+vif(fullfit)
+```
+
+###Model Selection
+After review of the variables, and given the question, we tested a model with just the transmission variable vs. a model that includes variables with low variable inflation...and tried nesting model testing to sow the correct model.
+
+This version nests and starts to add in cylinders as the first variable to the stack
+```{r}
+fit1 <- lm(mpg ~ am, data = mtcars)
+fit2 <- lm(mpg ~ am + drat + wt, data = mtcars)
+fit3 <- lm(mpg ~ am + cyl + drat + wt, data = mtcars)
+fit4 <- lm(mpg ~ am + cyl + drat + wt + gear, data = mtcars)
+fit5 <- lm(mpg ~ am + cyl + drat + wt + carb, data = mtcars)
+fit6 <- lm(mpg ~ am + cyl + drat + wt + carb + hp, data = mtcars)
+anova(fit1, fit2, fit3, fit4, fit5, fit6, fullfit)
+```
+
+Given the P scores above, we wanted to ensure that carburetors was not the right variable to start with instead of cylynders
+```{r}
+fit1a <- lm(mpg ~ am, data = mtcars)
+fit2a <- lm(mpg ~ am + drat + wt, data = mtcars)
+fit3a <- lm(mpg ~ am + carb + drat + wt, data = mtcars)
+anova(fit1a, fit2a, fit3a, fullfit)
+```
+
+Based on the above, it seems that the first version of fit3 is the right model to use, and we validate that by reviewing the volatility that adding cylinders into the model adds:
+```{r}
+fit3 <- lm(mpg ~ am + cyl + drat + wt, data = mtcars)
+vif(fit3)
 ```
